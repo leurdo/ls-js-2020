@@ -19,7 +19,7 @@
 
 function isAllTrue(array, fn) {
 
-    if ( !(array instanceof Array) || array.length === 0 ) {
+    if (!(array instanceof Array) || !array.length) {
         throw new Error('empty array');
     }
     if (typeof fn !== 'function') {
@@ -55,7 +55,7 @@ function isAllTrue(array, fn) {
  */
 function isSomeTrue(array, fn) {
 
-    if ( !(array instanceof Array) || array.length === 0 ) {
+    if (!(array instanceof Array) || !array.length) {
         throw new Error('empty array');
     }
     if (typeof fn !== 'function') {
@@ -84,15 +84,13 @@ function isSomeTrue(array, fn) {
  3.3: Необходимо выбрасывать исключение в случаях:
    - fn не является функцией (с текстом "fn is not a function")
  */
-function returnBadArguments(fn) {
-    let rest;
+function returnBadArguments(fn, ...rest) {
     let badArgumentsArray = [];
 
     if (typeof fn !== 'function') {
         throw new Error('fn is not a function');
     }
 
-    [fn, ...rest] = arguments;
     for (let item of rest) {
         try {
             fn(item);
@@ -122,20 +120,15 @@ function returnBadArguments(fn) {
    - какой-либо из аргументов div является нулем (с текстом "division by 0")
  */
 function calculator(number = 0) {
-    let obj;
 
     if (typeof number !== 'number') {
         throw new Error('number is not a number');
     }
 
-    obj = {
-        sum: function(...rest) {
-            return rest.reduce((a, b) => a + b, number);
-        },
-        dif: function(...rest) {
-            return rest.reduce((a, b) => a - b, number);
-        },
-        div: function(...rest) {
+    return {
+        sum: (...rest) => rest.reduce((a, b) => a + b, number),
+        dif: (...rest) => rest.reduce((a, b) => a - b, number),
+        div: (...rest) => {
             return rest.reduce((a, b) => {
                 if ( b === 0 ) {
                     throw new Error('division by 0');
@@ -144,12 +137,8 @@ function calculator(number = 0) {
                 return a / b;
             }, number)
         },
-        mul: function(...rest) {
-            return rest.reduce((a, b) => a * b, number)
-        }
+        mul: (...rest) => rest.reduce((a, b) => a * b, number),
     };
-
-    return obj;
 }
 
 /* При решении задач, пострайтесь использовать отладчик */
