@@ -16,7 +16,7 @@ module.exports = {
         towns: './src/towns.js'
     },
     devServer: {
-        index: 'dnd.html'
+        index: 'towns.html'
     },
     output: {
         filename: '[name].[hash].js',
@@ -29,11 +29,13 @@ module.exports = {
         new HtmlPlugin({
             title: 'Main Homework',
             template: 'index.hbs',
+            filename: 'index.html',
             chunks: ['main']
         }),
         new HtmlPlugin({
             title: 'Towns',
             template: './src/towns.hbs',
+            filename: 'towns.html',
             chunks: ['towns']
         }),
         new CleanWebpackPlugin()

@@ -37,6 +37,36 @@ const homeworkContainer = document.querySelector('#homework-container');
  https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json
  */
 function loadTowns() {
+    return fetch('https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json')
+        .then(response => response.json())
+        .then(data => {
+            return data.sort((a, b) => {
+                if (a.name > b.name) {
+                    return 1;
+                }
+                if (b.name > a.name) {
+                    return -1;
+                }
+
+                return 0;
+            })
+        })
+        .then(towns => {
+            loadingBlock.textContent = '';
+            filterBlock.style.display = 'block';
+
+            return towns;
+        })
+        .catch(() => {
+            loadingBlock.textContent = 'Не удалось загрузить города ';
+            let button = document.createElement('button');
+
+            button.textContent = 'Повторить';
+            button.addEventListener('click', () => {
+                towns = loadTowns();
+            });
+            loadingBlock.append(button);
+        });
 }
 
 /*
@@ -50,8 +80,7 @@ function loadTowns() {
    isMatching('Moscow', 'SCO') // true
    isMatching('Moscow', 'Moscov') // false
  */
-function isMatching(full, chunk) {
-}
+const isMatching = (full, chunk) => full.toLowerCase().includes(chunk.toLowerCase());
 
 /* Блок с надписью "Загрузка" */
 const loadingBlock = homeworkContainer.querySelector('#loading-block');
@@ -61,9 +90,39 @@ const filterBlock = homeworkContainer.querySelector('#filter-block');
 const filterInput = homeworkContainer.querySelector('#filter-input');
 /* Блок с результатами поиска */
 const filterResult = homeworkContainer.querySelector('#filter-result');
+let towns = loadTowns();
 
 filterInput.addEventListener('keyup', function() {
     // это обработчик нажатия кливиш в текстовом поле
+    let value = filterInput.value;
+    let matches = [];
+
+    filterResult.innerHTML = '';
+
+    // это чтобы удовлетворить тесты, хотя я не согласна и считаю что при пустом поле нужно показывать все города
+    if (!value) {
+        return;
+    }
+
+    towns.then(towns => {
+
+        towns.forEach(town => {
+            if (isMatching(town.name, value)) {
+                matches.push(town.name);
+            }
+        });
+
+        if ( matches.length ) {
+            matches.forEach(item => {
+                let el = document.createElement('p');
+
+                el.textContent = item;
+                filterResult.appendChild(el);
+            });
+        } else {
+            filterResult.textContent = 'Города не найдены';
+        }
+    })
 });
 
 export {
