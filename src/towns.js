@@ -29,6 +29,7 @@
    homeworkContainer.appendChild(newDiv);
  */
 const homeworkContainer = document.querySelector('#homework-container');
+const url = 'https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json';
 
 /*
  Функция должна вернуть Promise, который должен быть разрешен с массивом городов в качестве значения
@@ -37,10 +38,10 @@ const homeworkContainer = document.querySelector('#homework-container');
  https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json
  */
 function loadTowns() {
-    return fetch('https://raw.githubusercontent.com/smelukov/citiesTest/master/cities.json')
+    return fetch(url)
         .then(response => response.json())
-        .then(data => {
-            return data.sort((a, b) => {
+        .then(towns => {
+            towns = towns.sort((a, b) => {
                 if (a.name > b.name) {
                     return 1;
                 }
@@ -49,11 +50,44 @@ function loadTowns() {
                 }
 
                 return 0;
-            })
-        })
-        .then(towns => {
+            });
             loadingBlock.textContent = '';
             filterBlock.style.display = 'block';
+
+            filterInput.addEventListener('keyup', function() {
+                // это обработчик нажатия кливиш в текстовом поле
+                let value = filterInput.value;
+                let matches = [];
+
+                filterResult.innerHTML = '';
+
+                // это чтобы удовлетворить тесты, хотя я не согласна и считаю что при пустом поле нужно показывать все города
+                if (!value) {
+                    return;
+                }
+
+                towns.forEach(town => {
+                    if (isMatching(town.name, value)) {
+                        matches.push(town.name);
+                    }
+                });
+
+                if ( matches.length ) {
+                    let fragment = document.createDocumentFragment();
+
+                    matches.forEach(item => {
+                        let el = document.createElement('p');
+
+                        el.textContent = item;
+                        fragment.appendChild(el);
+                    });
+
+                    filterResult.appendChild(fragment);
+                } else {
+                    filterResult.textContent = 'Города не найдены';
+                }
+
+            });
 
             return towns;
         })
@@ -63,7 +97,7 @@ function loadTowns() {
 
             button.textContent = 'Повторить';
             button.addEventListener('click', () => {
-                towns = loadTowns();
+                loadTowns();
             });
             loadingBlock.append(button);
         });
@@ -90,40 +124,8 @@ const filterBlock = homeworkContainer.querySelector('#filter-block');
 const filterInput = homeworkContainer.querySelector('#filter-input');
 /* Блок с результатами поиска */
 const filterResult = homeworkContainer.querySelector('#filter-result');
-let towns = loadTowns();
 
-filterInput.addEventListener('keyup', function() {
-    // это обработчик нажатия кливиш в текстовом поле
-    let value = filterInput.value;
-    let matches = [];
-
-    filterResult.innerHTML = '';
-
-    // это чтобы удовлетворить тесты, хотя я не согласна и считаю что при пустом поле нужно показывать все города
-    if (!value) {
-        return;
-    }
-
-    towns.then(towns => {
-
-        towns.forEach(town => {
-            if (isMatching(town.name, value)) {
-                matches.push(town.name);
-            }
-        });
-
-        if ( matches.length ) {
-            matches.forEach(item => {
-                let el = document.createElement('p');
-
-                el.textContent = item;
-                filterResult.appendChild(el);
-            });
-        } else {
-            filterResult.textContent = 'Города не найдены';
-        }
-    })
-});
+loadTowns();
 
 export {
     loadTowns,
