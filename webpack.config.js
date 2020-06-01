@@ -39,7 +39,7 @@ const html = files['.hbs']
 if (!html.length || !files['.hbs'].find(file => file.name === 'index')) {
     html.push(new HtmlPlugin({
         title: 'index',
-        template: 'index.hbs',
+        template: 'index.html',
         chunks: ['index']
     }));
 }
