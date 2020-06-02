@@ -19,6 +19,33 @@ function init () {
         return dd + '.' + mm + '.' + yy;
     };
 
+    const getStorageData = () => {
+        if (localStorage.getItem('MapStorage')) {
+            return JSON.parse(localStorage.getItem('MapStorage'));
+        }
+
+        return [];
+    }
+    const setStorageData = storageData => localStorage.setItem('MapStorage', JSON.stringify(storageData));
+
+    // Вытаскиваем плейсмарки с данными из хранилища
+    const renderStorage = () => {
+        const data = getStorageData();
+
+        data.forEach((item, index) => {
+            const placemark = new ymaps.Placemark(item.testCoords, {
+                testName: item.testName,
+                testPlace: item.testPlace,
+                testDate: item.testDate,
+                testInfo: item.testInfo,
+                testAddress: item.testAddress,
+            });
+
+            myMap.geoObjects.add(placemark);
+            clusterer.add(placemark);
+        });
+    }
+
     // Кластеризация с каруселью
     const customItemContentLayout = ymaps.templateLayoutFactory.createClass(
         '<h5 class=ballon_header>$[properties.testPlace]</h5>' +
@@ -37,8 +64,6 @@ function init () {
             },
         }
     );
-
-
 
     var clusterer = new ymaps.Clusterer({
         clusterDisableClickZoom: true,
@@ -179,12 +204,27 @@ function init () {
                 ymaps.geocode(coords)
                     .then(function (res) {
                         let firstGeoObject = res.geoObjects.get(0);
+                        let testAddress = firstGeoObject.getAddressLine();
 
-                        placemark.properties.set('testAddress', firstGeoObject.getAddressLine());
+                        placemark.properties.set('testAddress', testAddress);
                         placemark.properties.set('testCoords', coords);
+
+                        // добавление плейсмарка в локал сторедж
+                        let data = getStorageData();
+
+                        data.push({
+                            testCoords: coords,
+                            testName: name,
+                            testPlace: place,
+                            testDate: date,
+                            testInfo: text,
+                            testAddress: testAddress,
+                        });
+                        setStorageData(data);
                     });
 
                 myMap.geoObjects.add(placemark);
+
                 clusterer.add(placemark);
                 container.innerHTML += testString;
                 this._parentElement.querySelector('#nameInput').value = this._parentElement.querySelector('#placeInput').value = this._parentElement.querySelector('#descriptionTextarea').value = '';
@@ -236,5 +276,7 @@ function init () {
     };
 
     myMap.events.add('click', clickOpenBalloon);
+
+    renderStorage();
 
 }
