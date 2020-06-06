@@ -1,9 +1,69 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './style.css';
+import { checkLatin, formatDate } from './helpers.js';
 
 const Handlebars = require('handlebars');
+// eslint-disable-next-line no-undef
+const socket = io();
+
 const chatWindow = document.querySelector('#chatContainer');
+const chatBox = document.querySelector('.chat-box');
 let CurrentUser = '';
+
+// Socket events
+const sendChatMessage = e => {
+    e.preventDefault();
+    const input = e.target.querySelector('input');
+    const message = input.value;
+
+    if (!message) {
+        return;
+    }
+    socket.emit('chat message', message);
+    input.value = '';
+
+    const messageTemplate = document.querySelector('#receiverMessageTemplate').innerHTML;
+    const hbsHtml = Handlebars.compile(messageTemplate);
+    const data = {
+        messageData: {
+            message: message,
+            time: formatDate(new Date()),
+        }
+    };
+
+    chatBox.insertAdjacentHTML('beforeEnd', hbsHtml(data));
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+}
+
+const receiveChatMessage = chatData => {
+    const users = getPersonsData();
+    const messageTemplate = document.querySelector('#senderMessageTemplate').innerHTML;
+    const hbsHtml = Handlebars.compile(messageTemplate);
+    const photo = users[chatData.username].photo;
+    const data = {
+        messageData: {
+            message: chatData.message,
+            time: formatDate(new Date()),
+            name: chatData.username,
+            photo: photo,
+        }
+    };
+
+    chatBox.insertAdjacentHTML('beforeEnd', hbsHtml(data));
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+const logUserJoined = username => {
+    chatBox.insertAdjacentHTML('beforeEnd', `<p>Присоединился пользователь ${username}</p>`);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    renderUserBox();
+}
+
+const logUserLeft = username => {
+    chatBox.insertAdjacentHTML('beforeEnd', `<p>Нас покинул пользователь ${username}</p>`);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 
 const renderHbs = (id, data) => {
     const el = document.querySelector(`#${id}`);
@@ -31,6 +91,11 @@ const renderUserBox = () => {
     }
     renderHbs('usersBox', { users: userArray });
     chatWindow.style.display = 'block';
+
+    // загрузка аватарки
+    const currentPhoto = document.querySelector('.active .media');
+
+    currentPhoto.addEventListener('click', setPhoto);
 }
 
 const newPerson = e => {
@@ -43,7 +108,6 @@ const newPerson = e => {
         'fio': fio,
         'photo': '',
     };
-
     let personData = getPersonsData() ? getPersonsData() : {};
 
     if (!personData[name]) {
@@ -57,17 +121,12 @@ const newPerson = e => {
     target.style.display = 'none';
     renderUserBox();
 
-    const currentPhoto = document.querySelector('.active .media');
-
-    currentPhoto.addEventListener('click', setPhoto);
-}
-
-const checkLatin = e => {
-    let regexp = /^[a-zA-Z]+$/;
-
-    if (!regexp.test(e.key)) {
-        e.preventDefault();
-    }
+    // подключаем клиента и обрабатываем сообщения
+    socket.emit('add user', CurrentUser);
+    document.querySelector('#chatSubmit').addEventListener('submit', sendChatMessage);
+    socket.on('chat message', receiveChatMessage);
+    socket.on('user joined', logUserJoined);
+    socket.on('user left', logUserLeft);
 }
 
 const setPhoto = () => {
