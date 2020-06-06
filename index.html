@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Чат</title>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body class="text-center">
+
+    <div id="loginBox">
+        <form id="form-signin" class="form-signin">
+            <h1 class="h3 mb-3 font-weight-normal">Авторизация</h1>
+            <p class="text-center">Введите пожалуйста свое ФИО и ник для дальнейшей авторизации</p>
+            <input type="text" id="fioInput" class="form-control mb-2" placeholder="Введите ФИО" required="" autofocus="" autocomplete="off">
+            <input type="text" id="nameInput" class="form-control mb-2" placeholder="Введите ник, только латиница" required="" autocomplete="off">
+            <button id="loginSubmit" class="btn btn-lg btn-primary btn-block" type="submit">Войти</button>
+        </form>
+    </div>
+
+    <div id="chatContainer" class="container py-5 px-4" style="display: none;">
+        <div class="row rounded-lg overflow-hidden shadow">
+            <!-- Users box-->
+            <div id="usersBox" class="col-5 px-0"></div>
+
+            <!-- Chat Box-->
+            <div class="col-7 px-0">
+                <div class="px-4 py-5 chat-box bg-white"></div>
+
+                <!-- Typing area -->
+                <form id="chatSubmit" action="#" class="bg-light">
+                    <div class="input-group">
+                        <input type="text" placeholder="Введите сообщение" aria-describedby="button-addon2" class="form-control rounded-0 border-0 py-4 bg-light">
+                        <div class="input-group-append">
+                            <button id="button-addon2" type="submit" class="btn btn-link"> <i class="fa fa-paper-plane"></i>Отправить</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Photo upload-->
+    <div id="setPhoto"></div>
+
+    <!-- Users box template-->
+    <script type="text/x-handlebars-template" id="usersBoxTemplate">
+        <div class="bg-white">
+            <div class="bg-gray px-4 py-2 bg-light">
+                <p class="h5 mb-0 py-1">Участники</p>
+            </div>
+            <div class="messages-box">
+                <div class="list-group rounded-0">
+                    {{#each users}}
+                        {{#if this.current}}
+                            <div class="list-group-item list-group-item-action active text-white rounded-0">
+                        {{else}}
+                            <div class="list-group-item list-group-item-action list-group-item-light rounded-0">
+                        {{/if}}
+                            <div class="media">
+                                {{#if this.photo}}
+                                    <img src="{{this.photo}}" alt="user" width="50" class="rounded-circle">
+                                {{else}}
+                                    <img src="https://res.cloudinary.com/mhmd/image/upload/v1564960395/avatar_usae7z.svg" alt="user" width="50" class="rounded-circle">
+                                {{/if}}
+                                <div class="media-body ml-4">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <h6 class="mb-0">{{this.fio}}</h6>
+                                    </div>
+                                    <p class="font-italic mb-0 text-small text-left">{{this.name}}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {{/each}}
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <!-- Photo upload box-->
+    <script type="text/x-handlebars-template" id="setPhotoTemplate">
+        <div class="modal set-photo" tabindex="-1" role="dialog" style="display: block">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Загрузка фото</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="media">
+                            <input type="file" id="photoInput">
+                            <label for="photoInput">
+                                {{#if userData.photo}}
+                                    <img src="{{userData.photo}}" id="photoImg" class="mr-3" alt="">
+                                {{else}}
+                                    <img src="https://res.cloudinary.com/mhmd/image/upload/v1564960395/avatar_usae7z.svg" id="photoImg" class="mr-3" alt="">
+                                {{/if}}
+                            </label>
+                            <div class="media-body">
+                                <h5 class="mt-0">{{userData.fio}}</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div id="fileResponse"></div>
+                        <button id="close" type="button" class="btn btn-secondary" data-dismiss="modal">Отмена</button>
+                        <button id="save" type="button" class="btn btn-primary">Сохранить</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <!-- Sender Message template-->
+    <script type="text/x-handlebars-template" id="senderMessageTemplate">
+        <div class="media w-50 mb-3">
+            {{#if messageData.photo}}
+                <img src="{{messageData.photo}}" alt="user" width="50" class="rounded-circle">
+            {{else}}
+                <img src="https://res.cloudinary.com/mhmd/image/upload/v1564960395/avatar_usae7z.svg" alt="user" width="50" class="rounded-circle">
+            {{/if}}
+            <div class="media-body ml-3">
+                <div class="bg-light rounded py-2 px-3 mb-2">
+                    <p class="text-small mb-0 text-muted">{{messageData.message}}</p>
+                </div>
+                <p class="small mb-0">{{messageData.name}}</p>
+                <p class="small text-muted">{{messageData.time}}</p>
+            </div>
+        </div>
+    </script>
+
+    <!-- Receiver Message template-->
+    <script type="text/x-handlebars-template" id="receiverMessageTemplate">
+        <div class="media w-50 ml-auto mb-3">
+            <div class="media-body">
+                <div class="bg-primary rounded py-2 px-3 mb-2">
+                    <p class="text-small mb-0 text-white">{{messageData.message}}</p>
+                </div>
+                <p class="small text-muted">{{messageData.time}}</p>
+            </div>
+        </div>
+    </script>
+
+</body>
+</html>
+

@@ -1,5 +1,5 @@
 const HtmlPlugin = require('html-webpack-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const rules = require('./webpack.config.rules');
 const fs = require('fs');
@@ -39,7 +39,7 @@ const html = files['.hbs']
 if (!html.length || !files['.hbs'].find(file => file.name === 'index')) {
     html.push(new HtmlPlugin({
         title: 'index',
-        template: 'index.hbs',
+        template: 'index.html',
         chunks: ['index']
     }));
 }
@@ -52,6 +52,9 @@ module.exports = {
     },
     mode: 'development',
     devtool: 'source-map',
+    devServer: {
+        port: 8080
+    },
     module: {
         rules: [
             ...rules,
@@ -69,6 +72,6 @@ module.exports = {
             filename: '[name].css',
         }),
         ...html,
-        new CleanWebpackPlugin(['dist'])
+        new CleanWebpackPlugin()
     ]
 };

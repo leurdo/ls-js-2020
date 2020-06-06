@@ -1,10 +1,8 @@
-## LoftSchool example project
+## LoftSchool выпускной проект 2
 
-### Доступные команды
+### Как запустить проект
 
-* `npm install` - установить зависимости
-* `npm run prepare` - запустить тесты и проверить стиль кода
-* `npm run test` - запустить тесты
-* `npm run codestyle` - проверить стиль кода
-* `npm run start` - запустить встроенный сервер и следить за изменениями файлов
-* `npm run build` - собрать проект в папку `build`
+1.  `npm install` - установить зависимости
+2.  `npm run build` - собрать проект в папку `dist`
+3. `npm run start` - запустить сервер на node.js
+
